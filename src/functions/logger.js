@@ -8,15 +8,20 @@ const limiter = new Bottleneck({
 
 /**
  * @param {string} url
+ * @param {string} avatarURL
  * @param {Object} options
  */
-function logViaWebhook(url, options) {
+function logViaWebhook(url, avatarURL, options) {
   if (!url) return;
 
   const webhookClient = new WebhookClient({ url });
 
   limiter.schedule(() => {
-    return webhookClient.send(options);
+    // We voegen de avatarURL toe aan de verzendopties
+    return webhookClient.send({
+      ...options,
+      avatarURL: avatarURL || undefined,
+    });
   })
   .catch(err => {
     console.error('[Logger] Error sending webhook log:', err);

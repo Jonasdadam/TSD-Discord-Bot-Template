@@ -24,13 +24,14 @@ module.exports = async (client, interaction) => {
       .setTimestamp()
       .setFooter({ text: 'Contextmenu Logger', iconURL: botConfig.bot_icons.log_icon });
 
-    const payload = {
-      username:   'Contextmenu Logger',
-      avatar_url: botConfig.bot_icons.log_icon,
-      embeds:     [contextEmbed.toJSON()]
-    };
 
-    logViaWebhook(process.env.contextLogWebhookURL, payload);
+    const webhookURL = process.env.contextLogWebhookURL;
+    const avatar = botConfig.bot_icons.command_log_icon;
+
+    logViaWebhook(webhookURL, avatar, {
+        username: 'Contextmenu Logger',
+        embeds: [embed.toJSON()]
+    });
   } catch (error) {
     console.error('Error sending contextmenu log:', error);
   }

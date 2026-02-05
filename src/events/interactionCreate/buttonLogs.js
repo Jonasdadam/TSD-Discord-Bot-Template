@@ -24,13 +24,14 @@ module.exports = async (client, interaction) => {
       .setTimestamp()
       .setFooter({ text: 'Button Logger', iconURL: botConfig.bot_icons.log_icon });
 
-    const payload = {
-      username:   'Button Logger',
-      avatar_url: botConfig.bot_icons.log_icon,
-      embeds:     [buttonEmbed.toJSON()]
-    };
 
-    logViaWebhook(process.env.buttonLogWebhookURL, payload);
+    const webhookURL = process.env.buttonLogWebhookURL;
+        const avatar = botConfig.bot_icons.log_icon;
+
+        logViaWebhook(webhookURL, avatar, {
+            username: 'Button Logger',
+            embeds: [embed.toJSON()]
+        });
   } catch (error) {
     console.error('Error sending button log:', error);
   }

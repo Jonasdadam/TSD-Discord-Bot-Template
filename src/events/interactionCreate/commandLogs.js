@@ -24,13 +24,14 @@ module.exports = async (client, interaction) => {
             .setTimestamp()
             .setFooter({ text: 'Command logger', iconURL: botConfig.bot_icons.log_icon });
 
-        const webhookPayload = {
-            username: 'Command Logger',
-            avatar_url: botConfig.bot_icons.log_icon || undefined,
-            embeds: [embed.toJSON()]
-        };
+        const webhookURL = process.env.commandLogWebhookURL;
+        const avatar = botConfig.bot_icons.log_icon;
 
-        logViaWebhook(process.env.commandLogWebhookURL, webhookPayload);
+        logViaWebhook(webhookURL, avatar, {
+            username: 'Command Logger',
+            embeds: [embed.toJSON()]
+        });
+
     } catch (error) {
         console.error('Error sending slashcommand log:', error);
     }
