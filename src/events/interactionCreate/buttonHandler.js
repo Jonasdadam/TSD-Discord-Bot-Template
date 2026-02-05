@@ -1,37 +1,67 @@
-const { EmbedBuilder } = require('discord.js');
-const botConfig = require('../../configs/botConfig.json');
-const axios = require('axios');
+require("colors");
 
-/**
- * 
- * @param {Client} client
- * @param {Interaction} interaction
- */
+const { EmbedBuilder, MessageFlags } = require("discord.js");
+const botConfig = require("../../configs/botConfig.json");
+const getButtons = require("../../utils/getButtons");
+
 module.exports = async (client, interaction) => {
-  if (!interaction.isButton() || !interaction.guild) return;
+  if (!interaction.isButton()) return;
 
-  if (!botConfig.logs.buttonlogger) return;
+  const buttons = getButtons();
 
   try {
-    const buttonEmbed = new EmbedBuilder()
-      .setColor(botConfig.bot_colors.main_color)
-      .setTitle('🖱️ Button Used!')
-      .addFields(
-        { name: 'Server',   value: interaction.guild.name, inline: false },
-        { name: 'Button ID', value: interaction.customId, inline: false },
-        { name: 'User', value: `${interaction.user.tag} (${interaction.user.id})`, inline: false }
-      )
-      .setTimestamp()
-      .setFooter({ text: 'Button Logger', iconURL: botConfig.bot_icons.log_icon });
+    const buttonObject = buttons.find((btn) => interaction.customId.startsWith(btn.customId));
+    if (!buttonObject) return;
 
-    const payload = {
-      username:   'Button Logger',
-      avatar_url: botConfig.bot_icons.log_icon,
-      embeds:     [buttonEmbed.toJSON()]
+    if (buttonObject.devOnly) {
+      if (!botConfig.development.devIDs.includes(interaction.member.id)) {
+        const rEmbed = new EmbedBuilder()
+          .setColor(`${botConfig.messages.embedColorError}`)
+          .setDescription(`${botConfig.messages.commandDevOnly}`);
+        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      };
     };
 
-    await axios.post(process.env.buttonLogWebhookURL, payload);
-  } catch (error) {
-    console.error('Error sending button log:', error);
-  }
+    if (buttonObject.testMode) {
+      if (interaction.guild.id !== botConfig.development.devServerID) {
+        const rEmbed = new EmbedBuilder()
+          .setColor(`${botConfig.messages.embedColorError}`)
+          .setDescription(`${botConfig.messages.commandTestMode}`);
+        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      };
+    };
+
+    if (buttonObject.userPermissions?.length) {
+      for (const permission of buttonObject.userPermissions) {
+        if (interaction.member.permissions.has(permission)) {
+          continue;
+        };
+        const rEmbed = new EmbedBuilder()
+          .setColor(`${botConfig.messages.embedColorError}`)
+          .setDescription(`${botConfig.messages.userNoPermissions}`);
+        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      };
+    };
+
+    if (buttonObject.botPermissions?.length) {
+      for (const permission of buttonObject.botPermissions) {
+        const bot = interaction.guild.members.me;
+        if (bot.permissions.has(permission)) {
+          continue;
+        };
+        const rEmbed = new EmbedBuilder()
+          .setColor(`${mConfig.embedColorError}`)
+          .setDescription(`${mConfig.botNoPermissions}`);
+        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      };
+    };
+
+    await buttonObject.run(client, interaction);
+  } catch (err) {
+    console.log(`An Button error occurred!\n${err}`.red);
+  };
 };
