@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const botConfig = require('../../configs/botConfig.json');
-const axios = require('axios');
+const { logViaWebhook } = require('../../functions/logger');
 
 /**
  * 
@@ -30,7 +30,7 @@ module.exports = async (client, interaction) => {
       embeds:     [buttonEmbed.toJSON()]
     };
 
-    await axios.post(process.env.buttonLogWebhookURL, payload);
+    logViaWebhook(process.env.buttonLogWebhookURL, payload);
   } catch (error) {
     console.error('Error sending button log:', error);
   }

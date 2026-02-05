@@ -1,21 +1,19 @@
 const { WebhookClient } = require('discord.js');
 const Bottleneck = require('bottleneck');
 
-const WEBHOOK_URL = process.env.LOG_WEBHOOK_URL;
-
 const limiter = new Bottleneck({
   maxConcurrent: 1,
   minTime: 200,
 });
 
-const webhookClient = new WebhookClient({ url: WEBHOOK_URL });
-
 /**
- *
+ * @param {string} url
  * @param {Object} options
- *
  */
-function logViaWebhook(options) {
+function logViaWebhook(url, options) {
+  if (!url) return;
+
+  const webhookClient = new WebhookClient({ url });
 
   limiter.schedule(() => {
     return webhookClient.send(options);

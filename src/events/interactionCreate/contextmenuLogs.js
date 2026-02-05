@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const botConfig = require('../../configs/botConfig.json');
-const axios = require('axios');
+const { logViaWebhook } = require('../../functions/logger');
 
 /**
  * 
@@ -30,7 +30,7 @@ module.exports = async (client, interaction) => {
       embeds:     [contextEmbed.toJSON()]
     };
 
-    await axios.post(process.env.contextLogWebhookURL, payload);
+    logViaWebhook(process.env.contextLogWebhookURL, payload);
   } catch (error) {
     console.error('Error sending contextmenu log:', error);
   }

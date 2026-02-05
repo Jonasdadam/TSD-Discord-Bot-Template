@@ -1,6 +1,6 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const botConfig = require("../../configs/botConfig.json");
-const axios = require('axios');
+const { logViaWebhook } = require('../../functions/logger');
 
 
 module.exports = async (client, interaction) => {
@@ -30,9 +30,7 @@ module.exports = async (client, interaction) => {
             embeds: [embed.toJSON()]
         };
 
-        const webhookURL = process.env.commandLogWebhookURL;
-
-        await axios.post(webhookURL, webhookPayload);
+        logViaWebhook(process.env.commandLogWebhookURL, webhookPayload);
     } catch (error) {
         console.error('Error sending slashcommand log:', error);
     }
