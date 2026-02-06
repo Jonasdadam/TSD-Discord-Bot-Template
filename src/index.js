@@ -6,6 +6,18 @@ const validateEnv = require("./utils/validateEnv");
 const connectDB = require("./database");
 
 (async () => {
+
+  const asciiArt = `
+  ____                   ____             
+ / ___| _   _ _ __ __  _|  _ \\  _____   __
+ \\___ \\| | | | '_ \\\\ \\/ / | | |\/ _ \\ \\ / /
+  ___) | |_| | | | |>  <| |_| |  __/\\ V / 
+ |____/ \\__, |_| |_/_/\\_\\____/ \\___| \\_/  
+        |___/                              
+`;
+
+  console.log(asciiArt.blue);
+
   await validateEnv(botConfig);
 
   await connectDB();
