@@ -1,6 +1,6 @@
 require("colors");
 const getSelects = require("../../utils/getSelects");
-const runValidation = require("../../utils/validation");
+const runValidation = require("../../utils/interactionValidator");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isAnySelectMenu()) return;

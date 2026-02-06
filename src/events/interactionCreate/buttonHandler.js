@@ -1,6 +1,6 @@
 require("colors");
 const getButtons = require("../../utils/getButtons");
-const runValidation = require("../../utils/validation");
+const runValidation = require("../../utils/interactionValidator");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isButton()) return;

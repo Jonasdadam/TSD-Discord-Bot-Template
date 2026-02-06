@@ -2,7 +2,7 @@ require("dotenv/config");
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const eventHandler = require("./handlers/eventHandler");
 const botConfig = require("./configs/botConfig.json");
-const validateEnv = require("./utils/validateEnv");
+const startupValidator = require("./utils/startupValidator");
 const connectDB = require("./database");
 
 (async () => {
@@ -18,7 +18,7 @@ const connectDB = require("./database");
 
   console.log(asciiArt.blue);
 
-  await validateEnv(botConfig);
+  await startupValidator(botConfig);
 
   await connectDB();
 
