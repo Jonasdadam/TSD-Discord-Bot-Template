@@ -14,7 +14,7 @@ module.exports = async (interaction, commandObject) => {
   if (commandObject.devOnly) {
     if (!botConfig.development.devIDs.includes(interaction.member.id)) {
       const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.messages.embedColorError}`)
+        .setColor(`${botConfig.bot_colors.error_color}`)
         .setDescription(`${botConfig.messages.commandDevOnly}`);
       await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
       return false;
@@ -25,7 +25,7 @@ module.exports = async (interaction, commandObject) => {
   if (commandObject.testMode) {
     if (interaction.guild.id !== botConfig.development.devServerID) {
       const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.messages.embedColorError}`)
+        .setColor(`${botConfig.bot_colors.error_color}`)
         .setDescription(`${botConfig.messages.commandTestMode}`);
       await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
       return false;
@@ -39,7 +39,7 @@ module.exports = async (interaction, commandObject) => {
         continue;
       }
       const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.messages.embedColorError}`)
+        .setColor(`${botConfig.bot_colors.error_color}`)
         .setDescription(`${botConfig.messages.userNoPermissions}`);
       await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
       return false;
@@ -54,7 +54,7 @@ module.exports = async (interaction, commandObject) => {
         continue;
       }
       const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.messages.embedColorError}`)
+        .setColor(`${botConfig.bot_colors.error_color}`)
         .setDescription(`${botConfig.messages.botNoPermissions}`);
       await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
       return false;
@@ -74,7 +74,7 @@ module.exports = async (interaction, commandObject) => {
     
     if (remaining > 0) {
       const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.messages.embedColorError}`)
+        .setColor(`${botConfig.bot_colors.error_color}`)
         .setDescription(
           botConfig.messages.commandOnCooldown.replace(
             "{time}",
