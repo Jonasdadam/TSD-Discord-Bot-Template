@@ -3,6 +3,7 @@ require("colors");
 const botConfig = require("../../configs/botConfig.json");
 const getApplicationContextMenus = require("../../utils/getApplicationCommands");
 const getLocalContextMenus = require("../../utils/getLocalContextMenus");
+const commandComparing = require("../../utils/commandComparing");
 
 module.exports = async (client) => {
   try {
@@ -29,14 +30,25 @@ module.exports = async (client) => {
         if (localContextMenu.deleted) {
           await applicationContextMenus.delete(existingContextMenu.id);
           console.log(
-            `Application command ${contextMenuName} has been deleted.`.red
+            `[CONTEXT MENU] Application command ${contextMenuName} has been deleted.`.red
           );
           continue;
         }
+
+        if (commandComparing(existingContextMenu, localContextMenu)) {
+            await applicationContextMenus.edit(existingContextMenu.id, {
+                name: contextMenuName,
+                type: contextMenuType,
+            });
+            console.log(
+                `[CONTEXT MENU] Application command ${contextMenuName} has been edited.`.yellow
+            );
+        }
+
       } else {
         if (localContextMenu.deleted) {
           console.log(
-            `Application command ${contextMenuName} has been skipped, since property "deleted" is set to "true".`
+            `[CONTEXT MENU] Application command ${contextMenuName} has been skipped, since property "deleted" is set to "true".`
               .grey
           );
           continue;
@@ -47,7 +59,7 @@ module.exports = async (client) => {
           type: contextMenuType,
         });
         console.log(
-          `Application command ${contextMenuName} has been registered.`.green
+          `[CONTEXT MENU] Application command ${contextMenuName} has been registered.`.green
         );
       }
     }

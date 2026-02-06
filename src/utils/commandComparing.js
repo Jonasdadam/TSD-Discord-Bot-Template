@@ -1,9 +1,24 @@
+const { ApplicationCommandType } = require("discord.js");
+
 module.exports = (existing, local) => {
   const changed = (a, b) => JSON.stringify(a) !== JSON.stringify(b);
 
-  if (changed(existing.name, local.data.name) || changed(existing.description || undefined, local.data.description || undefined)) {
+  const localType = local.data.type || ApplicationCommandType.ChatInput;
+
+  if (
+    changed(existing.name, local.data.name) ||
+    changed(existing.type, localType)
+  ) {
     return true;
-  };
+  }
+
+  if (localType === ApplicationCommandType.User || localType === ApplicationCommandType.Message) {
+    return false;
+  }
+
+  if (changed(existing.description || undefined, local.data.description || undefined)) {
+    return true;
+  }
 
   const optionsChanged = changed(
     optionsArray(existing),
@@ -37,6 +52,7 @@ module.exports = (existing, local) => {
         description: input.description,
         options: input.options ? normalizeObject(input.options) : undefined,
         required: input.required,
+        autocomplete: input.autocomplete, 
       };
 
       return normalizedItem;
