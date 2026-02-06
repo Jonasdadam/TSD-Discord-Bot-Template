@@ -1,4 +1,5 @@
 const readline = require("readline");
+require("colors"); // Zorg dat colors geïmporteerd is voor de .red, .yellow etc.
 
 /**
  * Valideert omgevingsvariabelen en vraagt om input voor ontbrekende optionele webhooks.
@@ -13,7 +14,7 @@ module.exports = async (botConfig) => {
   const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
   // 1. Controleer kritieke velden in botConfig.json
-  if (!botConfig.development?.devIDs || !Array.isArray(botConfig.development.devIDs)) {
+  if (!botConfig || !botConfig.development?.devIDs || !Array.isArray(botConfig.development.devIDs)) {
     console.error("[CRITICAL] 'development.devIDs' ontbreekt of is geen array in botConfig.json.".red);
     process.exit(1);
   }
@@ -23,7 +24,7 @@ module.exports = async (botConfig) => {
     process.exit(1);
   }
 
-  // 2. Kritieke omgevingsvariabelen (bot stopt als deze missen)
+  // 2. Kritieke omgevingsvariabelen
   const requiredEnv = ["TOKEN", "MONGODB_TOKEN"];
   for (const env of requiredEnv) {
     if (!process.env[env]) {
@@ -41,18 +42,21 @@ module.exports = async (botConfig) => {
 
   for (const webhook of optionalWebhooks) {
     if (!process.env[webhook.key]) {
-      console.warn(`[WAARSCHUWING] Webhook voor ${webhook.label} (${webhook.key}) ontbreekt.`.yellow);
+      // Gebruik een gewone string als fallback als colors raar doet
+      const warningMsg = `\n[WAARSCHUWING] Webhook voor ${webhook.label} (${webhook.key}) ontbreekt.`;
+      console.warn(warningMsg.yellow);
+
       const answer = await question(`Wil je een URL invullen voor ${webhook.label}? (Type URL of druk op Enter om te negeren): `);
       
       if (answer && answer.trim().startsWith("http")) {
         process.env[webhook.key] = answer.trim();
         console.log(`[OK] ${webhook.label} URL ingesteld voor deze sessie.`.green);
       } else {
-        console.log(`[SKIP] ${webhook.label} logging wordt uitgeschakeld.`.grey);
+        console.log(`[SKIP] ${webhook.label} logging wordt uitgeschakeld voor deze sessie.`.grey);
       }
     }
   }
 
   rl.close();
-  console.log("[VALIDATION] Validatie van config en env voltooid. Bot start op...".green);
+  console.log("[VALIDATION] Validatie van config en env voltooid. Bot start op...\n".green);
 };
