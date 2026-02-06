@@ -22,7 +22,6 @@ module.exports = async (client, interaction) => {
     );
     if (!menuObject) return;
 
-    // Alle checks (devOnly, permissions, cooldowns) via de centrale validator
     if (!(await runValidation(interaction, menuObject))) return;
 
     await menuObject.run(client, interaction);
