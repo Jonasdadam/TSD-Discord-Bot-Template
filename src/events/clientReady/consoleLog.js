@@ -3,8 +3,7 @@ const mongoose = require("mongoose");
 const mongoURI = process.env.MONGODB_TOKEN;
 
 module.exports = async (client) => {
-
-  console.clear();
+  
   const asciiArt = `
   ____                   ____             
  / ___| _   _ _ __ __  _|  _ \\  _____   __
