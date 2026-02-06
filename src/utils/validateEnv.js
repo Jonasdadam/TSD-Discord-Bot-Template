@@ -1,9 +1,8 @@
 const readline = require("readline");
-require("colors"); // Zorg dat colors geïmporteerd is voor de .red, .yellow etc.
+require("colors");
 
 /**
- * Valideert omgevingsvariabelen en vraagt om input voor ontbrekende optionele webhooks.
- * Controleert tevens of de botConfig de juiste velden bevat.
+ * Valideert omgevingsvariabelen en botConfig. Vraagt om input via de console indien nodig.
  */
 module.exports = async (botConfig) => {
   const rl = readline.createInterface({
@@ -13,22 +12,39 @@ module.exports = async (botConfig) => {
 
   const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-  // 1. Controleer kritieke velden in botConfig.json
-  if (!botConfig || !botConfig.development?.devIDs || !Array.isArray(botConfig.development.devIDs)) {
-    console.error("[CRITICAL] 'development.devIDs' ontbreekt of is geen array in botConfig.json.".red);
-    process.exit(1);
+  // 1. Controleer/Vraag kritieke velden in botConfig.json
+  if (!botConfig.development?.devIDs || !Array.isArray(botConfig.development.devIDs) || botConfig.development.devIDs.length === 0) {
+    console.warn("\n[WAARSCHUWING] 'development.devIDs' ontbreekt of is leeg in botConfig.json.".yellow);
+    const answer = await question("Voer een Developer ID in (of laat leeg om te stoppen): ");
+    
+    if (answer && answer.trim().length > 0) {
+      if (!botConfig.development) botConfig.development = {};
+      botConfig.development.devIDs = [answer.trim()];
+      console.log("[OK] Developer ID tijdelijk ingesteld.".green);
+    } else {
+      console.error("[CRITICAL] Geen Developer ID opgegeven. Bot stopt.".red);
+      process.exit(1);
+    }
   }
 
   if (!botConfig.development?.devServerID) {
-    console.error("[CRITICAL] 'development.devServerID' ontbreekt in botConfig.json.".red);
-    process.exit(1);
+    console.warn("\n[WAARSCHUWING] 'development.devServerID' ontbreekt in botConfig.json.".yellow);
+    const answer = await question("Voer het ID van de Developer Server in (of laat leeg om te stoppen): ");
+    
+    if (answer && answer.trim().length > 0) {
+      botConfig.development.devServerID = answer.trim();
+      console.log("[OK] Developer Server ID tijdelijk ingesteld.".green);
+    } else {
+      console.error("[CRITICAL] Geen Server ID opgegeven. Bot stopt.".red);
+      process.exit(1);
+    }
   }
 
-  // 2. Kritieke omgevingsvariabelen
+  // 2. Kritieke omgevingsvariabelen (TOKEN & MONGO)
   const requiredEnv = ["TOKEN", "MONGODB_TOKEN"];
   for (const env of requiredEnv) {
     if (!process.env[env]) {
-      console.error(`[CRITICAL] Omgevingsvariabele ${env} ontbreekt. De bot kan niet starten.`.red);
+      console.error(`\n[CRITICAL] Omgevingsvariabele ${env} ontbreekt. De bot kan niet starten.`.red);
       process.exit(1);
     }
   }
@@ -42,21 +58,18 @@ module.exports = async (botConfig) => {
 
   for (const webhook of optionalWebhooks) {
     if (!process.env[webhook.key]) {
-      // Gebruik een gewone string als fallback als colors raar doet
-      const warningMsg = `\n[WAARSCHUWING] Webhook voor ${webhook.label} (${webhook.key}) ontbreekt.`;
-      console.warn(warningMsg.yellow);
-
+      console.warn(`\n[WAARSCHUWING] Webhook voor ${webhook.label} (${webhook.key}) ontbreekt.`.yellow);
       const answer = await question(`Wil je een URL invullen voor ${webhook.label}? (Type URL of druk op Enter om te negeren): `);
       
       if (answer && answer.trim().startsWith("http")) {
         process.env[webhook.key] = answer.trim();
-        console.log(`[OK] ${webhook.label} URL ingesteld voor deze sessie.`.green);
+        console.log(`[OK] ${webhook.label} URL ingesteld.`.green);
       } else {
-        console.log(`[SKIP] ${webhook.label} logging wordt uitgeschakeld voor deze sessie.`.grey);
+        console.log(`[SKIP] ${webhook.label} logging uitgeschakeld.`.grey);
       }
     }
   }
 
   rl.close();
-  console.log("[VALIDATION] Validatie van config en env voltooid. Bot start op...\n".green);
+  console.log("\n[VALIDATION] Alle controles voltooid. Bot start op...\n".green);
 };
