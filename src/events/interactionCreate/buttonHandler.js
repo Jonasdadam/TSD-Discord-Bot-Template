@@ -1,8 +1,6 @@
 require("colors");
-
-const { EmbedBuilder, MessageFlags } = require("discord.js");
-const botConfig = require("../../configs/botConfig.json");
 const getButtons = require("../../utils/getButtons");
+const runValidation = require("../../utils/validation");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isButton()) return;
@@ -13,52 +11,7 @@ module.exports = async (client, interaction) => {
     const buttonObject = buttons.find((btn) => interaction.customId.startsWith(btn.customId));
     if (!buttonObject) return;
 
-    if (buttonObject.devOnly) {
-      if (!botConfig.development.devIDs.includes(interaction.member.id)) {
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.commandDevOnly}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      };
-    };
-
-    if (buttonObject.testMode) {
-      if (interaction.guild.id !== botConfig.development.devServerID) {
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.commandTestMode}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      };
-    };
-
-    if (buttonObject.userPermissions?.length) {
-      for (const permission of buttonObject.userPermissions) {
-        if (interaction.member.permissions.has(permission)) {
-          continue;
-        };
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.userNoPermissions}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      };
-    };
-
-    if (buttonObject.botPermissions?.length) {
-      for (const permission of buttonObject.botPermissions) {
-        const bot = interaction.guild.members.me;
-        if (bot.permissions.has(permission)) {
-          continue;
-        };
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${mConfig.embedColorError}`)
-          .setDescription(`${mConfig.botNoPermissions}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      };
-    };
+    if (!(await runValidation(interaction, buttonObject))) return;
 
     await buttonObject.run(client, interaction);
   } catch (err) {

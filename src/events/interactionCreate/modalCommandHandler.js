@@ -1,8 +1,6 @@
 require("colors");
-
-const { EmbedBuilder, MessageFlags } = require("discord.js");
-const botConfig = require("../../configs/botConfig.json");
 const getModals = require("../../utils/getModals");
+const runValidation = require("../../utils/validation");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isModalSubmit()) return;
@@ -15,52 +13,7 @@ module.exports = async (client, interaction) => {
     );
     if (!modalObject) return;
 
-    if (modalObject.devOnly) {
-      if (!botConfig.development.devIDs.includes(interaction.member.id)) {
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.commandDevOnly}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      }
-    }
-
-    if (modalObject.testMode) {
-      if (interaction.guild.id !== botConfig.development.devServerID) {
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.commandTestMode}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      }
-    }
-
-    if (modalObject.userPermissions?.length) {
-      for (const permission of modalObject.userPermissions) {
-        if (interaction.member.permissions.has(permission)) {
-          continue;
-        }
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.userNoPermissions}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      }
-    }
-
-    if (modalObject.botPermissions?.length) {
-      for (const permission of modalObject.botPermissions) {
-        const bot = interaction.guild.members.me;
-        if (bot.permissions.has(permission)) {
-          continue;
-        }
-        const rEmbed = new EmbedBuilder()
-          .setColor(`${botConfig.messages.embedColorError}`)
-          .setDescription(`${botConfig.messages.botNoPermissions}`);
-        interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-        return;
-      }
-    }
+    if (!(await runValidation(interaction, modalObject))) return;
 
     await modalObject.run(client, interaction);
   } catch (err) {
