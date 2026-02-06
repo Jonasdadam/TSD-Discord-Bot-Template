@@ -10,7 +10,7 @@ module.exports = async (client, interaction) => {
   if (!interaction.guild) {
     const rEmbed = new EmbedBuilder()
       .setColor(botConfig.messages.embedColorError)
-      .setDescription("Deze command kan niet gebruikt worden in DMs.");
+      .setDescription("This command cannot be used in DMs.");
     return interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
   }
 

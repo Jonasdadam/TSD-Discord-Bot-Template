@@ -17,7 +17,7 @@ function logViaWebhook(url, avatarURL, options) {
   const webhookClient = new WebhookClient({ url });
 
   limiter.schedule(() => {
-    // We voegen de avatarURL toe aan de verzendopties
+
     return webhookClient.send({
       ...options,
       avatarURL: avatarURL || undefined,

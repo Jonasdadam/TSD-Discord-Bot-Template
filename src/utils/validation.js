@@ -10,7 +10,7 @@ const { checkCooldown } = require("./cooldownManager");
  * @returns {Promise<boolean>} - Returns true if validation succeeds, false if it fails.
  */
 module.exports = async (interaction, commandObject) => {
-  // 1. Dev Only Check
+  // Dev Only Check
   if (commandObject.devOnly) {
     if (!botConfig.development.devIDs.includes(interaction.member.id)) {
       const rEmbed = new EmbedBuilder()
@@ -21,7 +21,7 @@ module.exports = async (interaction, commandObject) => {
     }
   }
 
-  // 2. Test Mode Check
+  // Test Mode Check
   if (commandObject.testMode) {
     if (interaction.guild.id !== botConfig.development.devServerID) {
       const rEmbed = new EmbedBuilder()
@@ -32,7 +32,7 @@ module.exports = async (interaction, commandObject) => {
     }
   }
 
-  // 3. User Permissions Check
+  // User Permissions Check
   if (commandObject.userPermissions?.length) {
     for (const permission of commandObject.userPermissions) {
       if (interaction.member.permissions.has(permission)) {
@@ -46,7 +46,7 @@ module.exports = async (interaction, commandObject) => {
     }
   }
 
-  // 4. Bot Permissions Check
+  // Bot Permissions Check
   if (commandObject.botPermissions?.length) {
     for (const permission of commandObject.botPermissions) {
       const bot = interaction.guild.members.me;
@@ -61,7 +61,7 @@ module.exports = async (interaction, commandObject) => {
     }
   }
 
-  // 5. Cooldown Check
+  // Cooldown Check
   if (commandObject.cooldown) {
     // Use command name OR customId as key for the cooldown
     const commandKey = commandObject.data?.name || commandObject.customId || "unknown_command";
