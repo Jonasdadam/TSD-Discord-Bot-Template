@@ -3,10 +3,12 @@ const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const eventHandler = require("./handlers/eventHandler");
 const botConfig = require("./configs/botConfig.json");
 const validateEnv = require("./utils/validateEnv");
+const connectDB = require("./database");
 
 (async () => {
-  // Wacht op validatie en eventuele console input
   await validateEnv(botConfig);
+
+  await connectDB();
 
   const client = new Client({
     intents: Object.keys(GatewayIntentBits).filter((key) => isNaN(key)),
@@ -14,6 +16,6 @@ const validateEnv = require("./utils/validateEnv");
   });
 
   eventHandler(client);
-
+  
   client.login(process.env.TOKEN);
 })();
