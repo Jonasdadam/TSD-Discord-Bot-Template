@@ -4,6 +4,7 @@ const eventHandler = require("./handlers/eventHandler");
 const botConfig = require("./configs/botConfig.json");
 const startupValidator = require("./utils/startupValidator");
 const connectDB = require("./database");
+const antiCrash = require("./handlers/antiCrash");
 
 (async () => {
 
@@ -26,6 +27,8 @@ const connectDB = require("./database");
     intents: Object.keys(GatewayIntentBits).filter((key) => isNaN(key)),
     partials: Object.keys(Partials).filter((key) => isNaN(key)),
   });
+
+  antiCrash(client);
 
   eventHandler(client);
   

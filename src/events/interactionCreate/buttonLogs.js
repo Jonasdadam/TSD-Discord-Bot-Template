@@ -12,6 +12,8 @@ module.exports = async (client, interaction) => {
 
   if (!botConfig.logs.buttonlogger) return;
 
+  if (interaction.customId.startsWith("crash_")) return;
+
   try {
     const buttonEmbed = new EmbedBuilder()
       .setColor(botConfig.bot_colors.main_color)
