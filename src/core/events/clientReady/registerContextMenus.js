@@ -1,6 +1,6 @@
 require("colors");
 
-const botConfig = require("../../configs/botConfig.json");
+const botConfig = require("../../../configs/botConfig.json");
 const getApplicationContextMenus = require("../../utils/getApplicationCommands");
 const getLocalContextMenus = require("../../utils/getLocalContextMenus");
 const commandComparing = require("../../utils/commandComparing");

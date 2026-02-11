@@ -1,5 +1,5 @@
 const { Events, EmbedBuilder } = require('discord.js');
-const botConfig = require("../../configs/botConfig.json");
+const botConfig = require("../../../configs/botConfig.json");
 const { logViaWebhook } = require('../../functions/logger');
 
 

@@ -3,7 +3,7 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exceptions = []) => {
   let modals = [];
-  const modalFiles = getAllFiles(path.join(__dirname, "..", "modals"));
+  const modalFiles = getAllFiles(path.join(__dirname, "..", "..", "modals"));
 
   for (const modalFile of modalFiles) {
     const modalObject = require(modalFile);

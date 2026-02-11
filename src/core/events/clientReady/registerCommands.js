@@ -3,7 +3,7 @@ require("colors");
 const commandComparing = require("../../utils/commandComparing");
 const getApplicationCommands = require("../../utils/getApplicationCommands");
 const getLocalCommands = require("../../utils/getLocalCommands");
-const botConfig = require("../../configs/botConfig.json");
+const botConfig = require("../../../configs/botConfig.json");
 const { ApplicationCommand, ApplicationCommandType } = require("discord.js");
 
 module.exports = async (client) => {

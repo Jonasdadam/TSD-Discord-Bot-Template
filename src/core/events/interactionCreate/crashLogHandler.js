@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
-const botConfig = require("../../configs/botConfig.json");
+const botConfig = require("../../../configs/botConfig.json");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isButton()) return;

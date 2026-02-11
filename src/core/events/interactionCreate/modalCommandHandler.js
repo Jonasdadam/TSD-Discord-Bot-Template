@@ -3,7 +3,7 @@ const { EmbedBuilder, MessageFlags } = require("discord.js");
 const getModals = require("../../utils/getModals");
 const runValidation = require("../../utils/interactionValidator");
 const logError = require("../../utils/errorLogger");
-const botConfig = require("../../configs/botConfig.json");
+const botConfig = require("../../../configs/botConfig.json");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isModalSubmit()) return;

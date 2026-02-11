@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const botConfig = require("../configs/botConfig.json");
+const botConfig = require("../../configs/botConfig.json");
 require("colors");
 
 /**

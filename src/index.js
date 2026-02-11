@@ -1,10 +1,10 @@
 require("dotenv/config");
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
-const eventHandler = require("./handlers/eventHandler");
+const eventHandler = require("./core/handlers/eventHandler");
 const botConfig = require("./configs/botConfig.json");
-const startupValidator = require("./utils/startupValidator");
-const connectDB = require("./database");
-const antiCrash = require("./handlers/antiCrash");
+const startupValidator = require("./core/utils/startupValidator");
+const connectDB = require("./core/database");
+const antiCrash = require("./core/handlers/antiCrash");
 
 (async () => {
 
