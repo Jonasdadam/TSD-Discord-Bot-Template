@@ -30,7 +30,7 @@ module.exports = async (client, interaction) => {
 
     logViaWebhook(webhookURL, avatar, {
         username: 'Contextmenu Logger',
-        embeds: [embed.toJSON()]
+        embeds: [contextEmbed.toJSON()]
     });
   } catch (error) {
     console.error('Error sending contextmenu log:', error);

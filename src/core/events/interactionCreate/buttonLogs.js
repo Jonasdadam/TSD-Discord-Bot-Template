@@ -32,7 +32,7 @@ module.exports = async (client, interaction) => {
 
         logViaWebhook(webhookURL, avatar, {
             username: 'Button Logger',
-            embeds: [embed.toJSON()]
+            embeds: [buttonEmbed.toJSON()]
         });
   } catch (error) {
     console.error('Error sending button log:', error);
