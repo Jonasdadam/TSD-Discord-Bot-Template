@@ -1,79 +1,120 @@
 const { ApplicationCommandType } = require("discord.js");
 
 module.exports = (existing, local) => {
-  const changed = (a, b) => JSON.stringify(a) !== JSON.stringify(b);
+  // 1. Normalize local data (handle Builder instances vs JSON objects)
+  const localData = local.data.toJSON ? local.data.toJSON() : local.data;
 
-  const localType = local.data.type || ApplicationCommandType.ChatInput;
+  // 2. Check top-level fields
+  const localType = localData.type || ApplicationCommandType.ChatInput;
 
+  if (existing.type !== localType) return true;
+
+  // Normaliseer beschrijvingen: Discord API geeft "" terug als het leeg is, Builder geeft undefined.
+  const existingDescription = existing.description || "";
+  const localDescription = localData.description || "";
+
+  if (existing.name !== localData.name || existingDescription !== localDescription) {
+    return true;
+  }
+
+  // 3. Check permissions (DMPermission / nsfw)
+  // DMPermission logic:
+  // API kan null geven (vooral bij Guild Commands of deprecated v14 logic).
+  // We vergelijken ALLEEN als de API expliciet true/false teruggeeft.
+  // Als API null/undefined is, negeren we de check om loops te voorkomen.
   if (
-    changed(existing.name, local.data.name) ||
-    changed(existing.type, localType)
+    typeof localData.dm_permission !== "undefined" && 
+    typeof existing.dmPermission === "boolean"
   ) {
-    return true;
+    if (existing.dmPermission !== localData.dm_permission) return true;
   }
+  
+  // NSFW check (behandel null/undefined als false)
+  const existingNSFW = existing.nsfw ?? false;
+  const localNSFW = localData.nsfw ?? false;
+  
+  if (existingNSFW !== localNSFW) return true;
 
-  if (localType === ApplicationCommandType.User || localType === ApplicationCommandType.Message) {
-    return false;
-  }
+  // 4. Check Options (Recursive)
+  const existingOptions = existing.options || [];
+  const localOptions = localData.options || [];
 
-  if (changed(existing.description || undefined, local.data.description || undefined)) {
-    return true;
-  }
-
-  const optionsChanged = changed(
-    optionsArray(existing),
-    optionsArray(local.data)
-  );
-
-  return optionsChanged;
-
-  function optionsArray(cmd) {
-    const cleanObject = (obj) => {
-      for (const key in obj) {
-        if (typeof obj[key] === "object") {
-          cleanObject(obj[key]);
-          if (!obj[key] || (Array.isArray(obj[key]) && !obj[key].length)) {
-            delete obj[key];
-          }
-        } else if (obj[key] === undefined) {
-          delete obj[key];
-        };
-      };
-    };
-
-    const normalizeObject = (input) => {
-      if (Array.isArray(input)) {
-        return input.map((item) => normalizeObject(item));
-      };
-
-      const normalizedItem = {
-        type: input.type,
-        name: input.name,
-        description: input.description,
-        options: input.options ? normalizeObject(input.options) : undefined,
-        required: input.required,
-        autocomplete: input.autocomplete, 
-      };
-
-      return normalizedItem;
-    };
-
-    return (cmd.options || []).map((option) => {
-      let cleanedOption = JSON.parse(JSON.stringify(option));
-      cleanedOption.options
-        ? (cleanedOption.options = normalizeObject(cleanedOption.options))
-        : (cleanedOption = normalizeObject(cleanedOption));
-      cleanObject(cleanedOption);
-      return {
-        ...cleanedOption,
-        choices: cleanedOption.choices
-          ? stringifyChoices(cleanedOption.choices)
-          : null,
-      };
-    });
-  };
-
-  function stringifyChoices(choices) {
-    return JSON.stringify(choices.map((c) => c.value));
-  };
+  return optionsChanged(existingOptions, localOptions);
 };
+
+function optionsChanged(existingOpts, localOpts) {
+  if (existingOpts.length !== localOpts.length) return true;
+
+  for (let i = 0; i < existingOpts.length; i++) {
+    const existing = existingOpts[i];
+    const local = localOpts[i];
+
+    // Normaliseer beschrijving voor opties
+    const existingOptDesc = existing.description || "";
+    const localOptDesc = local.description || "";
+
+    // Basic fields
+    if (
+      existing.name !== local.name ||
+      existing.type !== local.type ||
+      existingOptDesc !== localOptDesc ||
+      (existing.required ?? false) !== (local.required ?? false) ||
+      (existing.autocomplete ?? false) !== (local.autocomplete ?? false)
+    ) {
+      return true;
+    }
+
+    // Choices Comparison
+    const existingChoices = existing.choices || [];
+    const localChoices = local.choices || [];
+
+    if (existingChoices.length !== localChoices.length) return true;
+
+    for (let j = 0; j < existingChoices.length; j++) {
+      if (
+        existingChoices[j].name !== localChoices[j].name ||
+        existingChoices[j].value !== localChoices[j].value
+      ) {
+        return true;
+      }
+    }
+
+    // Channel Types
+    const existingChannelTypes = existing.channelTypes || [];
+    const localChannelTypes = local.channel_types || [];
+
+    if (existingChannelTypes.length !== localChannelTypes.length) return true;
+    
+    const existingTypesSorted = [...existingChannelTypes].sort().join(",");
+    const localTypesSorted = [...localChannelTypes].sort().join(",");
+    if (existingTypesSorted !== localTypesSorted) return true;
+
+    // Number Constraints
+    if (
+      (existing.minValue ?? undefined) !== (local.min_value ?? undefined) ||
+      (existing.maxValue ?? undefined) !== (local.max_value ?? undefined)
+    ) {
+      return true;
+    }
+
+    // String Constraints
+    if (
+      (existing.minLength ?? undefined) !== (local.min_length ?? undefined) ||
+      (existing.maxLength ?? undefined) !== (local.max_length ?? undefined)
+    ) {
+      return true;
+    }
+
+    // Recursive Sub-options
+    const existingSubOptions = existing.options || [];
+    const localSubOptions = local.options || [];
+
+    if (existingSubOptions.length > 0 || localSubOptions.length > 0) {
+      if (optionsChanged(existingSubOptions, localSubOptions)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
