@@ -1,15 +1,15 @@
 const { ApplicationCommandType } = require("discord.js");
 
 module.exports = (existing, local) => {
-  // 1. Normalize local data (handle Builder instances vs JSON objects)
+  // Normalize local data (handle Builder instances vs JSON objects)
   const localData = local.data.toJSON ? local.data.toJSON() : local.data;
 
-  // 2. Check top-level fields
+  // Check top-level fields
   const localType = localData.type || ApplicationCommandType.ChatInput;
 
   if (existing.type !== localType) return true;
 
-  // Normaliseer beschrijvingen: Discord API geeft "" terug als het leeg is, Builder geeft undefined.
+  // Normalize descriptions: Discord API returns "" if empty, Builder returns undefined.
   const existingDescription = existing.description || "";
   const localDescription = localData.description || "";
 
@@ -17,11 +17,12 @@ module.exports = (existing, local) => {
     return true;
   }
 
-  // 3. Check permissions (DMPermission / nsfw)
-  // DMPermission logic:
-  // API kan null geven (vooral bij Guild Commands of deprecated v14 logic).
-  // We vergelijken ALLEEN als de API expliciet true/false teruggeeft.
-  // Als API null/undefined is, negeren we de check om loops te voorkomen.
+  // Check permissions (DMPermission / nsfw)
+  /* DMPermission logic:
+     API may return null (especially with Guild Commands or deprecated v14 logic).
+     We ONLY compare if the API explicitly returns true/false.
+     If API is null/undefined, we ignore the check to prevent loops.
+  */
   if (
     typeof localData.dm_permission !== "undefined" && 
     typeof existing.dmPermission === "boolean"
@@ -29,7 +30,7 @@ module.exports = (existing, local) => {
     if (existing.dmPermission !== localData.dm_permission) return true;
   }
   
-  // NSFW check (behandel null/undefined als false)
+  // NSFW check (treat null/undefined as false)
   const existingNSFW = existing.nsfw ?? false;
   const localNSFW = localData.nsfw ?? false;
   
@@ -49,7 +50,7 @@ function optionsChanged(existingOpts, localOpts) {
     const existing = existingOpts[i];
     const local = localOpts[i];
 
-    // Normaliseer beschrijving voor opties
+    // Normalize description for options
     const existingOptDesc = existing.description || "";
     const localOptDesc = local.description || "";
 
