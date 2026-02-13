@@ -10,6 +10,17 @@ const { checkCooldown } = require("./cooldownManager");
  * @returns {Promise<boolean>} - Returns true if validation succeeds, false if it fails.
  */
 module.exports = async (interaction, commandObject) => {
+  // Owner Only Check
+  if (commandObject.ownerOnly) {
+    if (interaction.user.id !== botConfig.development.ownerID) { 
+      const rEmbed = new EmbedBuilder()
+        .setColor(`${botConfig.bot_colors.error_color}`)
+        .setDescription(`${botConfig.messages.commandOwnerOnly}`);
+      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+      return false;
+    }
+  }
+
   // Dev Only Check
   if (commandObject.devOnly) {
     if (!botConfig.development.devIDs.includes(interaction.member.id)) {
@@ -63,7 +74,6 @@ module.exports = async (interaction, commandObject) => {
 
   // Cooldown Check
   if (commandObject.cooldown) {
-    // Use command name OR customId as key for the cooldown
     const commandKey = commandObject.data?.name || commandObject.customId || "unknown_command";
     
     const remaining = checkCooldown(

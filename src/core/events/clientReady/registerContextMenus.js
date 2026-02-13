@@ -11,12 +11,12 @@ module.exports = async (client) => {
     let applicationContextMenus;
 
     for (const localContextMenu of localContextMenus) {
-      const { data } = localContextMenu;
+      const { data, disabled, ownerOnly, devOnly, testMode } = localContextMenu;
 
       const contextMenuName = data.name;
       const contextMenuType = data.type;
 
-      if (localContextMenu.testMode || localContextMenu.devOnly) {
+      if (testMode || devOnly || ownerOnly) {
         applicationContextMenus = await getApplicationContextMenus(client, botConfig.development.devServerID);
       } else {
         applicationContextMenus = await getApplicationContextMenus(client);
@@ -27,11 +27,9 @@ module.exports = async (client) => {
       );
 
       if (existingContextMenu) {
-        if (localContextMenu.deleted) {
+        if (disabled) {
           await applicationContextMenus.delete(existingContextMenu.id);
-          console.log(
-            `[CONTEXT MENU] Application command ${contextMenuName} has been deleted.`.red
-          );
+          console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been deleted.`.red);
           continue;
         }
 
@@ -40,17 +38,12 @@ module.exports = async (client) => {
                 name: contextMenuName,
                 type: contextMenuType,
             });
-            console.log(
-                `[CONTEXT MENU] Application command ${contextMenuName} has been edited.`.yellow
-            );
+            console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been edited.`.yellow);
         }
 
       } else {
-        if (localContextMenu.deleted) {
-          console.log(
-            `[CONTEXT MENU] Application command ${contextMenuName} has been skipped, since property "deleted" is set to "true".`
-              .grey
-          );
+        if (disabled) {
+          console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been skipped (disabled).`.grey);
           continue;
         }
 
@@ -58,14 +51,10 @@ module.exports = async (client) => {
           name: contextMenuName,
           type: contextMenuType,
         });
-        console.log(
-          `[CONTEXT MENU] Application command ${contextMenuName} has been registered.`.green
-        );
+        console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been registered.`.green);
       }
     }
   } catch (err) {
-    console.log(
-      `An error occurred while registering context menu's!\n${err}`.red
-    );
+    console.log(`An error occurred while registering context menu's!\n${err}`.red);
   }
 };

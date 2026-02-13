@@ -4,7 +4,7 @@ const commandComparing = require("../../utils/commandComparing");
 const getApplicationCommands = require("../../utils/getApplicationCommands");
 const getLocalCommands = require("../../utils/getLocalCommands");
 const botConfig = require("../../../configs/botConfig.json");
-const { ApplicationCommand, ApplicationCommandType } = require("discord.js");
+const { ApplicationCommandType } = require("discord.js");
 
 module.exports = async (client) => {
   try {
@@ -19,9 +19,10 @@ module.exports = async (client) => {
     const localGlobalNames = new Set();
     const localDevNames = new Set();
 
-      
-      for (const cmd of localCommands) {
-      if (cmd.devOnly || cmd.testMode) {
+    for (const cmd of localCommands) {
+      if (cmd.disabled) continue;
+
+      if (cmd.ownerOnly || cmd.devOnly || cmd.testMode) {
         localDevNames.add(cmd.data.name);
       } else {
         localGlobalNames.add(cmd.data.name);
@@ -33,29 +34,23 @@ module.exports = async (client) => {
       
       if (!localGlobalNames.has(cmd.name)) {
         await globalCommands.delete(id);
-        console.log(
-          `[COMMAND REGISTERY] Application command ${cmd.name} has been automatically removed.`
-            .red
-        );
+        console.log(`[COMMAND REGISTERY] Global command ${cmd.name} has been automatically removed.`.red);
       }
     }
 
     for (const [id, cmd] of devCommands.cache) {
       if (!localDevNames.has(cmd.name)) {
         await devCommands.delete(id);
-        console.log(
-          `[COMMAND REGISTERY] Application command ${cmd.name} has been automatically removed.`
-            .red
-        );
+        console.log(`[COMMAND REGISTERY] Dev command ${cmd.name} has been automatically removed.`.red);
       }
     }
 
     for (const localCommand of localCommands) {
-      const { data, deleted } = localCommand;
+      const { data, disabled } = localCommand;
       const { name: commandName } = data;
 
-       const applicationCommands =
-        localCommand.testMode || localCommand.devOnly
+      const applicationCommands =
+        localCommand.ownerOnly || localCommand.devOnly || localCommand.testMode
           ? devCommands
           : globalCommands;
 
@@ -63,31 +58,24 @@ module.exports = async (client) => {
         (cmd) => cmd.name === commandName
       );
 
-
-      if (deleted) {
+      if (disabled) {
         if (existingCommand) {
           await applicationCommands.delete(existingCommand.id);
-          console.log(
-            `[COMMAND REGISTERY] Application command ${commandName} has been deleted.`
-              .red
-          );
+          console.log(`[COMMAND REGISTERY] Application command ${commandName} has been deleted (disabled).`.red);
         } else {
-          console.log(
-            `[COMMAND REGISTERY] Application command ${commandName} has been skipped, since property "deleted" is set to "true".`
-              .grey
-          );
+            console.log(`[COMMAND REGISTERY] Application command ${commandName} has been skipped (disabled).`.grey);
         }
-      } else if (existingCommand) {
+        continue;
+      }
+
+      if (existingCommand) {
         if (commandComparing(existingCommand, localCommand)) {
           await applicationCommands.edit(existingCommand.id, {
             name: commandName,
             description: data.description,
             options: data.options,
           });
-          console.log(
-            `[COMMAND REGISTERY] Application command ${commandName} has been edited.`
-              .yellow
-          );
+          console.log(`[COMMAND REGISTERY] Application command ${commandName} has been edited.`.yellow);
         }
       } else {
         await applicationCommands.create({
@@ -95,10 +83,7 @@ module.exports = async (client) => {
           description: data.description,
           options: data.options,
         });
-        console.log(
-          `[COMMAND REGISTERY] Application command ${commandName} has been registered.`
-            .green
-        );
+        console.log(`[COMMAND REGISTERY] Application command ${commandName} has been registered.`.green);
       }
     }
   } catch (err) {
