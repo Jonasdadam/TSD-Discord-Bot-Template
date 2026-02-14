@@ -10,13 +10,13 @@ const { logViaWebhook } = require('../../functions/logger');
 module.exports = async (client, interaction) => {
   if (!interaction.isButton() || !interaction.guild) return;
 
-  if (!botConfig.logs.buttonlogger) return;
+  if (!botConfig.logs.buttons) return;
 
   if (interaction.customId.startsWith("crash_")) return;
 
   try {
     const buttonEmbed = new EmbedBuilder()
-      .setColor(botConfig.bot_colors.main_color)
+      .setColor(botConfig.colors.main)
       .setTitle('🖱️ Button Used!')
       .addFields(
         { name: 'Server',   value: interaction.guild.name, inline: false },
@@ -24,11 +24,11 @@ module.exports = async (client, interaction) => {
         { name: 'User', value: `${interaction.user.tag} (${interaction.user.id})`, inline: false }
       )
       .setTimestamp()
-      .setFooter({ text: 'Button Logger', iconURL: botConfig.bot_icons.log_icon });
+      .setFooter({ text: 'Button Logger', iconURL: botConfig.icons.logs });
 
 
     const webhookURL = process.env.buttonLogWebhookURL;
-        const avatar = botConfig.bot_icons.log_icon;
+        const avatar = botConfig.icons.logs;
 
         logViaWebhook(webhookURL, avatar, {
             username: 'Button Logger',

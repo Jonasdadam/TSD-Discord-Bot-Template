@@ -24,7 +24,7 @@ module.exports = async (client, interaction) => {
     logError(client, err, "Button Error", interaction);
 
     const errorEmbed = new EmbedBuilder()
-      .setColor(botConfig.bot_colors.error_color || 0xff0000)
+      .setColor(botConfig.colors.error || 0xff0000)
       .setTitle("❌ Oops!")
       .setDescription("Something went wrong while executing this button. The developers have been notified.");
 

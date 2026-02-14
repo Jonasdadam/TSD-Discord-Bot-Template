@@ -10,11 +10,11 @@ const { logViaWebhook } = require('../../functions/logger');
 module.exports = async (client, interaction) => {
   if (!interaction.isContextMenuCommand() || !interaction.guild) return;
 
-  if (!botConfig.logs.contextlogger) return;
+  if (!botConfig.logs.contextMenus) return;
 
   try {
     const contextEmbed = new EmbedBuilder()
-      .setColor(botConfig.bot_colors.main_color)
+      .setColor(botConfig.colors.main)
       .setTitle('📋 Contextmenu Command Used!')
       .addFields(
         { name: 'Server',   value: interaction.guild.name, inline: false },
@@ -22,11 +22,11 @@ module.exports = async (client, interaction) => {
         { name: 'User',value: `${interaction.user.tag} (${interaction.user.id})`, inline: false }
       )
       .setTimestamp()
-      .setFooter({ text: 'Contextmenu Logger', iconURL: botConfig.bot_icons.log_icon });
+      .setFooter({ text: 'Contextmenu Logger', iconURL: botConfig.icons.logs });
 
 
     const webhookURL = process.env.contextLogWebhookURL;
-    const avatar = botConfig.bot_icons.command_log_icon;
+    const avatar = botConfig.icons.command_logs;
 
     logViaWebhook(webhookURL, avatar, {
         username: 'Contextmenu Logger',

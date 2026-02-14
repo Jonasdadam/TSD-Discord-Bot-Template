@@ -3,98 +3,63 @@ const { EmbedBuilder, MessageFlags } = require("discord.js");
 const botConfig = require("../../configs/botConfig.json");
 const { checkCooldown } = require("./cooldownManager");
 
-/**
- * Performs standard validations for an interaction (command, button, menu, etc.)
- * @param {import("discord.js").BaseInteraction} interaction
- * @param {Object} commandObject - The command/button/menu object from the file
- * @returns {Promise<boolean>} - Returns true if validation succeeds, false if it fails.
- */
 module.exports = async (interaction, commandObject) => {
+  const { user, member, guild } = interaction;
+  const { ownerID, devIDs, devServerID } = botConfig.development;
+
   // Owner Only Check
-  if (commandObject.ownerOnly) {
-    if (interaction.user.id !== botConfig.development.ownerID) { 
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(`${botConfig.messages.commandOwnerOnly}`);
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-      return false;
-    }
+  if (commandObject.ownerOnly && user.id !== ownerID) {
+    await sendError(interaction, botConfig.messages.commandOwnerOnly);
+    return false;
   }
 
   // Dev Only Check
-  if (commandObject.devOnly) {
-    if (!botConfig.development.devIDs.includes(interaction.member.id)) {
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(`${botConfig.messages.commandDevOnly}`);
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-      return false;
-    }
+  if (commandObject.devOnly && !devIDs.includes(user.id)) {
+    await sendError(interaction, botConfig.messages.commandDevOnly);
+    return false;
   }
 
   // Test Mode Check
-  if (commandObject.testMode) {
-    if (interaction.guild.id !== botConfig.development.devServerID) {
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(`${botConfig.messages.commandTestMode}`);
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
-      return false;
-    }
+  if (commandObject.testMode && guild?.id !== devServerID) {
+    await sendError(interaction, botConfig.messages.commandTestMode);
+    return false;
   }
 
-  // User Permissions Check
-  if (commandObject.userPermissions?.length) {
-    for (const permission of commandObject.userPermissions) {
-      if (interaction.member.permissions.has(permission)) {
-        continue;
-      }
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(`${botConfig.messages.userNoPermissions}`);
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+  // Permissions Check (Enkel in guilds)
+  if (guild) {
+    // User Permissions
+    if (commandObject.userPermissions?.length && !member.permissions.has(commandObject.userPermissions)) {
+      await sendError(interaction, botConfig.messages.userNoPermissions);
       return false;
     }
-  }
 
-  // Bot Permissions Check
-  if (commandObject.botPermissions?.length) {
-    for (const permission of commandObject.botPermissions) {
-      const bot = interaction.guild.members.me;
-      if (bot.permissions.has(permission)) {
-        continue;
-      }
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(`${botConfig.messages.botNoPermissions}`);
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+    // Bot Permissions
+    if (commandObject.botPermissions?.length && !guild.members.me.permissions.has(commandObject.botPermissions)) {
+      await sendError(interaction, botConfig.messages.botNoPermissions);
       return false;
     }
   }
 
   // Cooldown Check
   if (commandObject.cooldown) {
-    const commandKey = commandObject.data?.name || commandObject.customId || "unknown_command";
-    
-    const remaining = checkCooldown(
-      interaction.user.id,
-      commandKey,
-      commandObject.cooldown * 1000
-    );
-    
+    const commandKey = commandObject.data?.name || commandObject.customId || "unknown_interaction";
+    const remaining = checkCooldown(user.id, commandKey, commandObject.cooldown * 1000);
+
     if (remaining > 0) {
-      const rEmbed = new EmbedBuilder()
-        .setColor(`${botConfig.bot_colors.error_color}`)
-        .setDescription(
-          botConfig.messages.commandOnCooldown.replace(
-            "{time}",
-            Math.ceil(remaining / 1000)
-          )
-        );
-      await interaction.reply({ embeds: [rEmbed], flags: MessageFlags.Ephemeral });
+      const time = Math.ceil(remaining / 1000);
+      await sendError(interaction, botConfig.messages.commandOnCooldown.replace("{time}", time));
       return false;
     }
   }
 
   return true;
 };
+
+async function sendError(interaction, description) {
+  const embed = new EmbedBuilder()
+    .setColor(botConfig.colors.error)
+    .setDescription(description);
+
+  // Use reply with ephemeral flag. Catch prevents errors if interaction has already been answered.
+  return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral }).catch(() => {});
+}

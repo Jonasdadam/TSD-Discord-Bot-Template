@@ -59,7 +59,7 @@ module.exports = async (message, commmand) => {
 
 async function sendError(message, description) {
   const embed = new EmbedBuilder()
-    .setColor(botConfig.bot_colors.error_color)
+    .setColor(botConfig.colors.error)
     .setDescription(description);
   
   await message.reply({ embeds: [embed] }).catch(() => {});
