@@ -1,60 +1,99 @@
 require("colors");
-
+const { ApplicationCommandType } = require("discord.js");
 const botConfig = require("../../../configs/botConfig.json");
-const getApplicationContextMenus = require("../../utils/getApplicationCommands");
+const getApplicationCommands = require("../../utils/getApplicationCommands");
 const getLocalContextMenus = require("../../utils/getLocalContextMenus");
 const commandComparing = require("../../utils/commandComparing");
 
 module.exports = async (client) => {
   try {
     const localContextMenus = await getLocalContextMenus();
-    let applicationContextMenus;
+    
+    const globalCommands = await getApplicationCommands(client);
+    const devCommands = await getApplicationCommands(
+      client,
+      botConfig.development.devServerID
+    );
 
-    for (const localContextMenu of localContextMenus) {
-      const { data, disabled, ownerOnly, devOnly, testMode } = localContextMenu;
+    const localGlobalNames = new Set();
+    const localDevNames = new Set();
 
-      const contextMenuName = data.name;
-      const contextMenuType = data.type;
+    // Sort local menus into Dev or Global buckets
+    for (const menu of localContextMenus) {
+      if (menu.disabled) continue;
 
-      if (testMode || devOnly || ownerOnly) {
-        applicationContextMenus = await getApplicationContextMenus(client, botConfig.development.devServerID);
+      if (menu.ownerOnly || menu.devOnly || menu.testMode) {
+        localDevNames.add(menu.data.name);
       } else {
-        applicationContextMenus = await getApplicationContextMenus(client);
-      }
-
-      const existingContextMenu = await applicationContextMenus.cache.find(
-        (cmd) => cmd.name === contextMenuName
-      );
-
-      if (existingContextMenu) {
-        if (disabled) {
-          await applicationContextMenus.delete(existingContextMenu.id);
-          console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been deleted.`.red);
-          continue;
-        }
-
-        if (commandComparing(existingContextMenu, localContextMenu)) {
-            await applicationContextMenus.edit(existingContextMenu.id, {
-                name: contextMenuName,
-                type: contextMenuType,
-            });
-            console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been edited.`.yellow);
-        }
-
-      } else {
-        if (disabled) {
-          console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been skipped (disabled).`.grey);
-          continue;
-        }
-
-        await applicationContextMenus.create({
-          name: contextMenuName,
-          type: contextMenuType,
-        });
-        console.log(`[CONTEXT MENU] Application command ${contextMenuName} has been registered.`.green);
+        localGlobalNames.add(menu.data.name);
       }
     }
+
+    // Cleanup Global Commands (Context Menus only)
+    for (const [id, cmd] of globalCommands.cache) {
+      // Skip ChatInput (Slash Commands) to avoid deleting them
+      if (cmd.type === ApplicationCommandType.ChatInput) continue; 
+
+      if (!localGlobalNames.has(cmd.name)) {
+        await globalCommands.delete(id);
+        console.log(`[CONTEXT MENU] Global command ${cmd.name} has been automatically removed.`.red);
+      }
+    }
+
+    // Cleanup Dev Commands (Context Menus only)
+    for (const [id, cmd] of devCommands.cache) {
+      // Skip ChatInput (Slash Commands)
+      if (cmd.type === ApplicationCommandType.ChatInput) continue;
+
+      if (!localDevNames.has(cmd.name)) {
+        await devCommands.delete(id);
+        console.log(`[CONTEXT MENU] Dev command ${cmd.name} has been automatically removed.`.red);
+      }
+    }
+
+    // Register or Update Local Menus
+    for (const localMenu of localContextMenus) {
+      const { data, disabled, ownerOnly, devOnly, testMode } = localMenu;
+      const { name: menuName } = data;
+
+      // Determine target collection (Dev or Global)
+      const applicationCommands =
+        ownerOnly || devOnly || testMode
+          ? devCommands
+          : globalCommands;
+
+      const existingCommand = applicationCommands.cache.find(
+        (cmd) => cmd.name === menuName
+      );
+
+      if (disabled) {
+        if (existingCommand) {
+          await applicationCommands.delete(existingCommand.id);
+          console.log(`[CONTEXT MENU] Application command ${menuName} has been deleted (disabled).`.red);
+        } else {
+          console.log(`[CONTEXT MENU] Application command ${menuName} has been skipped (disabled).`.grey);
+        }
+        continue;
+      }
+
+      if (existingCommand) {
+        if (commandComparing(existingCommand, localMenu)) {
+          await applicationCommands.edit(existingCommand.id, {
+            name: menuName,
+            type: data.type,
+          });
+          console.log(`[CONTEXT MENU] Application command ${menuName} has been edited.`.yellow);
+        }
+      } else {
+        await applicationCommands.create({
+          name: menuName,
+          type: data.type,
+        });
+        console.log(`[CONTEXT MENU] Application command ${menuName} has been registered.`.green);
+      }
+    }
+
   } catch (err) {
-    console.log(`An error occurred while registering context menu's!\n${err}`.red);
+    console.log(`[ERROR] An error occurred while registering context menus!\n${err}`.red);
   }
 };

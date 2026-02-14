@@ -29,7 +29,9 @@ module.exports = async (client) => {
       }
     }
 
+    // Clean Global Commands
     for (const [id, cmd] of globalCommands.cache) {
+      // Ignore anything that is NOT a Slash Command (ChatInput). This prevents Context Menus from being accidentally deleted.
       if (cmd.type !== ApplicationCommandType.ChatInput) continue;
       
       if (!localGlobalNames.has(cmd.name)) {
@@ -38,13 +40,17 @@ module.exports = async (client) => {
       }
     }
 
+    // Clean Dev Commands
     for (const [id, cmd] of devCommands.cache) {
+      if (cmd.type !== ApplicationCommandType.ChatInput) continue;
+
       if (!localDevNames.has(cmd.name)) {
         await devCommands.delete(id);
         console.log(`[COMMAND REGISTERY] Dev command ${cmd.name} has been automatically removed.`.red);
       }
     }
 
+    // Register/Update Local Commands
     for (const localCommand of localCommands) {
       const { data, disabled } = localCommand;
       const { name: commandName } = data;
