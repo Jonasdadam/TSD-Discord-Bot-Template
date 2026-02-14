@@ -2,3 +2,5 @@
 /src/configs/*.json
 /node_modules
 package-lock.json
+.prettierrc
+.prettierignore
