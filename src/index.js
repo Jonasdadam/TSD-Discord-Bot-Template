@@ -24,8 +24,8 @@ const antiCrash = require("./core/handlers/antiCrash");
   await connectDB();
 
   const client = new Client({
-    intents: Object.keys(GatewayIntentBits).filter((key) => isNaN(key)),
-    partials: Object.keys(Partials).filter((key) => isNaN(key)),
+    intents: Object.keys(GatewayIntentBits).map((key) => GatewayIntentBits[key]),
+    partials: Object.keys(Partials).map((key) => Partials[key]),
   });
 
   antiCrash(client);
