@@ -11,6 +11,7 @@ module.exports = {
   disabled: false,
   devOnly: false,
   testMode: false,
+  ownerOnly: false,
   cooldown: 3,
   userPermissions: [],
   botPermissions: [],
