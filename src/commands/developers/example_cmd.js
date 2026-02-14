@@ -1,14 +1,16 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, InteractionContextType, ApplicationIntegrationType } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("ping")
     .setDescription("Ping the bot to see if it's online.")
-    .setDMPermission(false)
+    .setContexts(InteractionContextType.Guild)
+    .setIntegrationTypes(ApplicationIntegrationType.GuildInstall)
+    .setNSFW(true)
     .toJSON(),
-  deleted: false,
+  disabled: false,
   devOnly: false,
-  testMode: true,
+  testMode: false,
   cooldown: 3,
   userPermissions: [],
   botPermissions: [],

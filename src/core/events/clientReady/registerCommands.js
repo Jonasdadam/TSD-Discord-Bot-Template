@@ -1,5 +1,4 @@
 require("colors");
-
 const commandComparing = require("../../utils/commandComparing");
 const getApplicationCommands = require("../../utils/getApplicationCommands");
 const getLocalCommands = require("../../utils/getLocalCommands");
@@ -29,9 +28,7 @@ module.exports = async (client) => {
       }
     }
 
-    // Clean Global Commands
     for (const [id, cmd] of globalCommands.cache) {
-      // Ignore anything that is NOT a Slash Command (ChatInput). This prevents Context Menus from being accidentally deleted.
       if (cmd.type !== ApplicationCommandType.ChatInput) continue;
       
       if (!localGlobalNames.has(cmd.name)) {
@@ -40,7 +37,6 @@ module.exports = async (client) => {
       }
     }
 
-    // Clean Dev Commands
     for (const [id, cmd] of devCommands.cache) {
       if (cmd.type !== ApplicationCommandType.ChatInput) continue;
 
@@ -50,7 +46,6 @@ module.exports = async (client) => {
       }
     }
 
-    // Register/Update Local Commands
     for (const localCommand of localCommands) {
       const { data, disabled } = localCommand;
       const { name: commandName } = data;
@@ -76,19 +71,21 @@ module.exports = async (client) => {
 
       if (existingCommand) {
         if (commandComparing(existingCommand, localCommand)) {
-          await applicationCommands.edit(existingCommand.id, {
-            name: commandName,
-            description: data.description,
-            options: data.options,
-          });
+          const typeChanged = existingCommand.type !== (data.type || ApplicationCommandType.ChatInput);
+          const contextsChanged = arraysChanged(existingCommand.contexts, data.contexts);
+          const integrationsChanged = arraysChanged(existingCommand.integrationTypes, data.integration_types);
+
+          if (typeChanged || contextsChanged || integrationsChanged) {
+            await applicationCommands.delete(existingCommand.id);
+            await applicationCommands.create(data);
+          } else {
+            await applicationCommands.edit(existingCommand.id, data);
+          }
+          
           console.log(`[COMMAND REGISTERY] Application command ${commandName} has been edited.`.yellow);
         }
       } else {
-        await applicationCommands.create({
-          name: commandName,
-          description: data.description,
-          options: data.options,
-        });
+        await applicationCommands.create(data);
         console.log(`[COMMAND REGISTERY] Application command ${commandName} has been registered.`.green);
       }
     }
@@ -96,3 +93,13 @@ module.exports = async (client) => {
     console.log(`[ERROR] An error occurred while registering commands!\n${err}`.red);
   }
 };
+
+function arraysChanged(arr1, arr2) {
+  const a1 = arr1 || [];
+  const a2 = arr2 || [];
+  if (a1.length !== a2.length) return true;
+  const s1 = [...a1].map(String).sort();
+  const s2 = [...a2].map(String).sort();
+  for (let i = 0; i < s1.length; i++) if (s1[i] !== s2[i]) return true;
+  return false;
+}

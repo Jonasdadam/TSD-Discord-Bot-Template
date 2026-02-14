@@ -18,7 +18,6 @@ module.exports = async (client) => {
     const localGlobalNames = new Set();
     const localDevNames = new Set();
 
-    // Sort local menus into Dev or Global buckets
     for (const menu of localContextMenus) {
       if (menu.disabled) continue;
 
@@ -29,9 +28,7 @@ module.exports = async (client) => {
       }
     }
 
-    // Cleanup Global Commands (Context Menus only)
     for (const [id, cmd] of globalCommands.cache) {
-      // Skip ChatInput (Slash Commands) to avoid deleting them
       if (cmd.type === ApplicationCommandType.ChatInput) continue; 
 
       if (!localGlobalNames.has(cmd.name)) {
@@ -40,9 +37,7 @@ module.exports = async (client) => {
       }
     }
 
-    // Cleanup Dev Commands (Context Menus only)
     for (const [id, cmd] of devCommands.cache) {
-      // Skip ChatInput (Slash Commands)
       if (cmd.type === ApplicationCommandType.ChatInput) continue;
 
       if (!localDevNames.has(cmd.name)) {
@@ -51,12 +46,10 @@ module.exports = async (client) => {
       }
     }
 
-    // Register or Update Local Menus
     for (const localMenu of localContextMenus) {
       const { data, disabled, ownerOnly, devOnly, testMode } = localMenu;
       const { name: menuName } = data;
 
-      // Determine target collection (Dev or Global)
       const applicationCommands =
         ownerOnly || devOnly || testMode
           ? devCommands
@@ -78,17 +71,21 @@ module.exports = async (client) => {
 
       if (existingCommand) {
         if (commandComparing(existingCommand, localMenu)) {
-          await applicationCommands.edit(existingCommand.id, {
-            name: menuName,
-            type: data.type,
-          });
+          const typeChanged = existingCommand.type !== data.type;
+          const contextsChanged = arraysChanged(existingCommand.contexts, data.contexts);
+          const integrationsChanged = arraysChanged(existingCommand.integrationTypes, data.integration_types);
+
+          if (typeChanged || contextsChanged || integrationsChanged) {
+            await applicationCommands.delete(existingCommand.id);
+            await applicationCommands.create(data);
+          } else {
+            await applicationCommands.edit(existingCommand.id, data);
+          }
+
           console.log(`[CONTEXT MENU] Application command ${menuName} has been edited.`.yellow);
         }
       } else {
-        await applicationCommands.create({
-          name: menuName,
-          type: data.type,
-        });
+        await applicationCommands.create(data);
         console.log(`[CONTEXT MENU] Application command ${menuName} has been registered.`.green);
       }
     }
@@ -97,3 +94,13 @@ module.exports = async (client) => {
     console.log(`[ERROR] An error occurred while registering context menus!\n${err}`.red);
   }
 };
+
+function arraysChanged(arr1, arr2) {
+  const a1 = arr1 || [];
+  const a2 = arr2 || [];
+  if (a1.length !== a2.length) return true;
+  const s1 = [...a1].map(String).sort();
+  const s2 = [...a2].map(String).sort();
+  for (let i = 0; i < s1.length; i++) if (s1[i] !== s2[i]) return true;
+  return false;
+}
