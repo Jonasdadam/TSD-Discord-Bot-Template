@@ -7,8 +7,7 @@ const connectDB = require("./core/database");
 const antiCrash = require("./core/handlers/antiCrash");
 
 (async () => {
-
-  const asciiArt = `
+	const asciiArt = `
   ____                   ____             
  / ___| _   _ _ __ __  _|  _ \\  _____   __
  \\___ \\| | | | '_ \\\\ \\/ / | | |\/ _ \\ \\ / /
@@ -17,20 +16,20 @@ const antiCrash = require("./core/handlers/antiCrash");
         |___/                              
 `;
 
-  console.log(asciiArt.blue);
+	console.log(asciiArt.blue);
 
-  await startupValidator(botConfig);
+	await startupValidator(botConfig);
 
-  await connectDB();
+	await connectDB();
 
-  const client = new Client({
-    intents: Object.keys(GatewayIntentBits).map((key) => GatewayIntentBits[key]),
-    partials: Object.keys(Partials).map((key) => Partials[key]),
-  });
+	const client = new Client({
+		intents: Object.keys(GatewayIntentBits).map((key) => GatewayIntentBits[key]),
+		partials: Object.keys(Partials).map((key) => Partials[key]),
+	});
 
-  antiCrash(client);
+	antiCrash(client);
 
-  eventHandler(client);
-  
-  client.login(process.env.TOKEN);
+	eventHandler(client);
+
+	client.login(process.env.TOKEN);
 })();

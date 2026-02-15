@@ -1,24 +1,22 @@
 const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 
 module.exports = {
-  name: "ping",
-  description: "Check the bot's latency",
-  aliases: ["p", "latency"],
-  
-  disabled: false,
-  devOnly: true,
-  testMode: false,
-  ownerOnly: false,
-  guildOnly: false,
-  cooldown: 5,
-  userPermissions: [],
-  botPermissions: [PermissionFlagsBits.SendMessages],
+	name: "ping",
+	description: "Check the bot's latency",
+	aliases: ["p", "latency"],
 
-  run: async (client, message, args) => {
-    const embed = new EmbedBuilder()
-      .setColor("Blue")
-      .setDescription(`🏓 Pong! Latency: ${client.ws.ping}ms`);
+	disabled: false,
+	ownerOnly: false,
+	devOnly: true,
+	testMode: false,
+	guildOnly: false,
+	cooldown: 5,
+	userPermissions: [],
+	botPermissions: [PermissionFlagsBits.SendMessages],
 
-    await message.reply({ embeds: [embed] });
-  },
+	run: async (client, message, args) => {
+		const embed = new EmbedBuilder().setColor("Blue").setDescription(`🏓 Pong! Latency: ${client.ws.ping}ms`);
+
+		await message.reply({ embeds: [embed] });
+	},
 };

@@ -6,43 +6,36 @@ const runValidation = require("../../utils/prefixValidator");
 const logError = require("../../utils/errorLogger");
 
 module.exports = async (client, message) => {
-  // Basic checks
-  if (message.author.bot) return;
+	if (message.author.bot) return;
 
-  const prefix = botConfig.prefix;
-  if (!message.content.startsWith(prefix)) return;
+	const prefix = botConfig.prefix;
+	if (!message.content.startsWith(prefix)) return;
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
+	const args = message.content.slice(prefix.length).trim().split(/ +/);
+	const commandName = args.shift().toLowerCase();
 
-  const localPrefixCommands = getLocalPrefixCommands();
-  const commandObject = localPrefixCommands.find(
-    (cmd) => cmd.name === commandName || (cmd.aliases && cmd.aliases.includes(commandName))
-  );
+	const localPrefixCommands = getLocalPrefixCommands();
+	const commandObject = localPrefixCommands.find((cmd) => cmd.name === commandName || (cmd.aliases && cmd.aliases.includes(commandName)));
 
-  if (!commandObject) return;
+	if (!commandObject) return;
 
-  // Disabled check
-  if (commandObject.disabled) return;
+	if (commandObject.disabled) return;
 
-  try {
-    // Run validation (Permissions, Cooldowns, Dev/Owner checks)
-    if (!(await runValidation(message, commandObject))) return;
+	try {
+		if (!(await runValidation(message, commandObject))) return;
 
-    // Execute the command
-    await commandObject.run(client, message, args);
+		await commandObject.run(client, message, args);
+	} catch (err) {
+		console.log(`Error in prefix command ${commandObject.name}:`.red);
+		console.error(err);
 
-  } catch (err) {
-    console.log(`Error in prefix command ${commandObject.name}:`.red);
-    console.error(err);
+		logError(client, err, "Prefix Command Error", message);
 
-    logError(client, err, "Prefix Command Error", message);
+		const errorEmbed = new EmbedBuilder()
+			.setColor(botConfig.colors.error || 0xff0000)
+			.setTitle("❌ Oops!")
+			.setDescription("Something went wrong while executing this command. The developers have been notified.");
 
-    const errorEmbed = new EmbedBuilder()
-      .setColor(botConfig.colors.error || 0xff0000)
-      .setTitle("❌ Oops!")
-      .setDescription("Something went wrong while executing this command. The developers have been notified.");
-
-    await message.reply({ embeds: [errorEmbed] }).catch(() => {});
-  }
+		await message.reply({ embeds: [errorEmbed] }).catch(() => {});
+	}
 };

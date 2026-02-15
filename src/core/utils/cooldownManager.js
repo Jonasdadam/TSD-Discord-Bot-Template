@@ -8,16 +8,16 @@ const cooldowns = new Map();
  * @returns {number} Time remaining in milliseconds, or 0 if no cooldown.
  */
 function checkCooldown(userId, commandName, cooldown) {
-  const now = Date.now();
-  const key = `${userId}:${commandName}`;
-  const expiration = cooldowns.get(key);
+	const now = Date.now();
+	const key = `${userId}:${commandName}`;
+	const expiration = cooldowns.get(key);
 
-  if (expiration && now < expiration) {
-    return expiration - now;
-  }
+	if (expiration && now < expiration) {
+		return expiration - now;
+	}
 
-  cooldowns.set(key, now + cooldown);
-  return 0;
+	cooldowns.set(key, now + cooldown);
+	return 0;
 }
 
 module.exports = { checkCooldown };
