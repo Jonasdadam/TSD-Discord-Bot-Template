@@ -1,0 +1,34 @@
+{
+	"prefix": "!",
+
+	"development": {
+		"ownerID": "337696854642917376",
+		"devIDs": ["337696854642917376"],
+		"devServerID": "1467686725664112784",
+		"errorChannelID": "1468298482522652804"
+	},
+
+	"logs": {
+		"commands": true,
+		"buttons": true,
+		"contextMenus": true
+	},
+
+	"colors": {
+		"main": "#03FCF4",
+		"error": "#FB2F61"
+	},
+
+	"icons": {
+		"logs": "https://i.postimg.cc/Y0JqNfK1/Gemini-Generated-Image-lzslj6lzslj6lzsl-removebg-preview.png"
+	},
+
+	"messages": {
+		"commandOwnerOnly": "⛔ | Only the bot owner can use this command.",
+		"commandDevOnly": "⛔ | This command is restricted to developers.",
+		"commandTestMode": "⛔ | This command is only available in the developer server.",
+		"userNoPermissions": "⛔ | You do not have the required permissions to use this.",
+		"botNoPermissions": "⛔ | I do not have the required permissions to execute this.",
+		"commandOnCooldown": "⏳ | Please wait {time} seconds before using this again."
+	}
+}
