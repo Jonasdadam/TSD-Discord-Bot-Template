@@ -3,7 +3,7 @@ const { EmbedBuilder } = require("discord.js");
 const botConfig = require("../../configs/botConfig.json");
 const { checkCooldown } = require("./cooldownManager");
 
-module.exports = async (message, commmand) => {
+module.exports = async (message, command) => {
 	const { author, guild, member } = message;
 	const { ownerID, devIDs, devServerID } = botConfig.development;
 
