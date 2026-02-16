@@ -18,7 +18,7 @@ module.exports = (directory, foldersOnly = false) => {
 				fileNames.push(filePath);
 			}
 		} else {
-			if (file.isFile()) {
+			if (file.isFile() && file.name.endsWith(".js")) {
 				fileNames.push(filePath);
 			}
 		}
