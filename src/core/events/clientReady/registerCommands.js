@@ -30,7 +30,7 @@ module.exports = async (client) => {
 
 			if (!localGlobalNames.has(cmd.name)) {
 				await globalCommands.delete(id);
-				console.log(`[COMMAND REGISTERY] Global command ${cmd.name} has been automatically removed.`.red);
+				console.log(`[COMMAND REGISTRY] Global command ${cmd.name} has been automatically removed.`.red);
 			}
 		}
 
@@ -39,7 +39,7 @@ module.exports = async (client) => {
 
 			if (!localDevNames.has(cmd.name)) {
 				await devCommands.delete(id);
-				console.log(`[COMMAND REGISTERY] Dev command ${cmd.name} has been automatically removed.`.red);
+				console.log(`[COMMAND REGISTRY] Dev command ${cmd.name} has been automatically removed.`.red);
 			}
 		}
 
@@ -54,9 +54,9 @@ module.exports = async (client) => {
 			if (disabled) {
 				if (existingCommand) {
 					await applicationCommands.delete(existingCommand.id);
-					console.log(`[COMMAND REGISTERY] Application command ${commandName} has been deleted (disabled).`.red);
+					console.log(`[COMMAND REGISTRY] Application command ${commandName} has been deleted (disabled).`.red);
 				} else {
-					console.log(`[COMMAND REGISTERY] Application command ${commandName} has been skipped (disabled).`.grey);
+					console.log(`[COMMAND REGISTRY] Application command ${commandName} has been skipped (disabled).`.grey);
 				}
 				continue;
 			}
@@ -74,11 +74,11 @@ module.exports = async (client) => {
 						await applicationCommands.edit(existingCommand.id, data);
 					}
 
-					console.log(`[COMMAND REGISTERY] Application command ${commandName} has been edited.`.yellow);
+					console.log(`[COMMAND REGISTRY] Application command ${commandName} has been edited.`.yellow);
 				}
 			} else {
 				await applicationCommands.create(data);
-				console.log(`[COMMAND REGISTERY] Application command ${commandName} has been registered.`.green);
+				console.log(`[COMMAND REGISTRY] Application command ${commandName} has been registered.`.green);
 			}
 		}
 	} catch (err) {
