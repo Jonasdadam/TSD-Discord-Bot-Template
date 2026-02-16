@@ -3,4 +3,4 @@
 package-lock.json
 .prettierrc
 .prettierignore
-/configs/botConfig.json
+/src/configs/*.json
