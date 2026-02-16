@@ -2,16 +2,16 @@
 	"prefix": "!",
 
 	"development": {
-		"ownerID": "337696854642917376",
-		"devIDs": ["337696854642917376"],
-		"devServerID": "1467686725664112784",
-		"errorChannelID": "1468298482522652804"
+		"ownerID": "",
+		"devIDs": [],
+		"devServerID": "",
+		"errorChannelID": ""
 	},
 
 	"logs": {
-		"commands": true,
-		"buttons": true,
-		"contextMenus": true
+		"commands": false,
+		"buttons": false,
+		"contextMenus": false
 	},
 
 	"colors": {
