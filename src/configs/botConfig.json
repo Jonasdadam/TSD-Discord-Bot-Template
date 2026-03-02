@@ -2,10 +2,10 @@
 	"prefix": "!",
 
 	"development": {
-		"ownerID": "",
-		"devIDs": [],
-		"devServerID": "",
-		"errorChannelID": ""
+		"ownerID": "337696854642917376",
+		"devIDs": ["337696854642917376"],
+		"devServerID": "1467686725664112784",
+		"errorChannelID": "1468298482522652804"
 	},
 
 	"logs": {
