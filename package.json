@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A Discord Bot template.",
   "main": "src/index.js",
+  "bin": {
+    "tsd": "./TSD-CLI.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
