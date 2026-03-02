@@ -3,46 +3,91 @@ require("colors");
 const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 
-const REPO_URL = "https://github.com/TheSynxDev/tsd-plugins.git";
+// Configure the GitHub details
+const REPO_OWNER = "Jonasdadam"; // Of TheSynxDev
+const REPO_NAME = "TSD-Plugins";
+const REPO_BRANCH = "main";
 const PLUGINS_DIR_IN_REPO = "plugins";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-switch (command) {
-	case "help":
-	case undefined:
-		showHelp();
-		break;
+// --- Helper Functions for Native GitHub Downloads ---
+function fetchJson(url) {
+	return new Promise((resolve, reject) => {
+		https.get(url, { headers: { "User-Agent": "TSD-CLI" } }, (res) => {
+			let data = "";
+			res.on("data", (chunk) => (data += chunk));
+			res.on("end", () => {
+				if (res.statusCode >= 200 && res.statusCode < 300) {
+					resolve(JSON.parse(data));
+				} else {
+					reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+				}
+			});
+		}).on("error", reject);
+	});
+}
 
-	case "install":
-	case "i":
-		const pluginName = args[1];
-		if (!pluginName) {
-			console.error("\n[ERROR] Please provide a plugin name.".red);
-			console.log("Usage:\ntsd install <plugin-name>\nor\ntsd i <plugin-name>\n".yellow);
-			process.exit(1);
-		}
-		installPlugin(pluginName, false);
-		break;
-	
-	case "update":
-	case "u":
-		const target = args[1];
-		if (target) {
-			console.log(`\n[INFO] Updating plugin: ${target}...`.cyan);
-			installPlugin(target, true); // Set overwrite to true for updating plugins
-		} else {
-			console.error("\n[ERROR] Please provide a plugin name.".red);
-			console.log("Usage:\ntsd update <plugin-name>\nor\ntsd u <plugin-name>\n".yellow);
-			process.exit(1);
-		}
-		break;
-	default:
-		console.error(`\n[ERROR] Unknown command: ${command}`.red);
-		showHelp();
-		break;
+function downloadFile(url, dest) {
+	return new Promise((resolve, reject) => {
+		const file = fs.createWriteStream(dest);
+		https.get(url, { headers: { "User-Agent": "TSD-CLI" } }, (res) => {
+			if (res.statusCode >= 200 && res.statusCode < 300) {
+				res.pipe(file);
+				file.on("finish", () => {
+					file.close();
+					resolve();
+				});
+			} else {
+				reject(new Error(`Failed to download (HTTP ${res.statusCode})`));
+			}
+		}).on("error", (err) => {
+			fs.unlink(dest, () => {});
+			reject(err);
+		});
+	});
+}
+// ----------------------------------------------------
+
+async function main() {
+	switch (command) {
+		case "help":
+		case undefined:
+			showHelp();
+			break;
+
+		case "install":
+		case "i":
+			const pluginName = args[1];
+			if (!pluginName) {
+				console.error("\n[ERROR] Please provide a plugin name.".red);
+				console.log("Usage:\ntsd install <plugin-name>\nor\ntsd i <plugin-name>\n".yellow);
+				process.exit(1);
+			}
+			await installPlugin(pluginName, false);
+			break;
+
+		case "update":
+		case "u":
+			const target = args[1];
+			if (target) {
+				console.log(`\n[INFO] Updating plugin: ${target}...`.cyan);
+				await installPlugin(target, true);
+			} else {
+				console.error("\n[ERROR] Please provide a plugin name.".red);
+				console.log("Usage:\ntsd update <plugin-name>\nor\ntsd u <plugin-name>\n".yellow);
+				process.exit(1);
+			}
+			break;
+
+		default:
+			console.error(`\n[ERROR] Unknown command: ${command}`.red);
+			showHelp();
+			break;
+	}
 }
 
 function showHelp() {
@@ -61,7 +106,7 @@ update <plugin-name>    	Updates a specific plugin (overwrites existing files)
 `.cyan);
 }
 
-function installPlugin(pluginName, overwrite = false) {
+async function installPlugin(pluginName, overwrite = false) {
 	const tempDir = path.join(__dirname, ".temp_plugin_download");
 	const targetSrcDir = path.join(__dirname, "src");
 
@@ -71,17 +116,40 @@ function installPlugin(pluginName, overwrite = false) {
 		}
 		fs.mkdirSync(tempDir);
 
-		console.log(`[INFO] Downloading plugin files...`.cyan);
-		execSync(`git clone --depth 1 --filter=blob:none --sparse ${REPO_URL} "${tempDir}"`, { stdio: "ignore" });
-		execSync(`git sparse-checkout set ${PLUGINS_DIR_IN_REPO}/${pluginName}`, { cwd: tempDir, stdio: "ignore" });
+		console.log(`[INFO] Fetching plugin data...`.cyan);
+		
+		// 1. Fetch the entire file tree of the repository
+		const treeUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${REPO_BRANCH}?recursive=1`;
+		let treeData;
+		
+		try {
+			treeData = await fetchJson(treeUrl);
+		} catch (err) {
+			throw new Error("Could not fetch repository structure. Ensure the repository is public and not empty.");
+		}
 
-		const pluginPath = path.join(tempDir, PLUGINS_DIR_IN_REPO, pluginName);
+		// 2. Filter out only the files that belong to our specific plugin
+		const pluginPrefix = `${PLUGINS_DIR_IN_REPO}/${pluginName}/`;
+		const pluginFiles = treeData.tree.filter((item) => item.type === "blob" && item.path.startsWith(pluginPrefix));
 
-		if (!fs.existsSync(pluginPath)) {
+		if (pluginFiles.length === 0) {
 			throw new Error(`Plugin '${pluginName}' does not exist.`);
 		}
 
-		const pluginSrcPath = path.join(pluginPath, "src");
+		console.log(`[INFO] Downloading ${pluginFiles.length} files...`.cyan);
+
+		// 3. Download each file directly
+		for (const file of pluginFiles) {
+			const relativePath = file.path.substring(pluginPrefix.length);
+			const destPath = path.join(tempDir, relativePath);
+
+			fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+			const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/${file.path}`;
+			await downloadFile(rawUrl, destPath);
+		}
+
+		const pluginSrcPath = path.join(tempDir, "src");
 
 		if (!fs.existsSync(pluginSrcPath)) {
 			throw new Error(`Plugin '${pluginName}' does not have a 'src' directory.`);
@@ -90,7 +158,7 @@ function installPlugin(pluginName, overwrite = false) {
 		console.log(`[INFO] Integrating plugin files into the bot...`.cyan);
 		copyFolderRecursiveSync(pluginSrcPath, targetSrcDir, overwrite);
 
-		const pluginPackageJson = path.join(pluginPath, "package.json");
+		const pluginPackageJson = path.join(tempDir, "package.json");
 		if (fs.existsSync(pluginPackageJson)) {
 			console.log(`[INFO] Checking additional dependencies...`.cyan);
 			const pkgData = JSON.parse(fs.readFileSync(pluginPackageJson, "utf8"));
@@ -110,6 +178,7 @@ function installPlugin(pluginName, overwrite = false) {
 	} catch (error) {
 		console.error(`\n[ERROR] Failed to ${overwrite ? "update" : "install"} plugin: ${error.message}\n`.red);
 	} finally {
+		// Always clean up the temp folder
 		if (fs.existsSync(tempDir)) {
 			fs.rmSync(tempDir, { recursive: true, force: true });
 		}
@@ -144,3 +213,5 @@ function copyFolderRecursiveSync(source, target, overwrite = false) {
 		}
 	}
 }
+
+main();
