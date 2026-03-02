@@ -160,7 +160,7 @@ async function installPlugin(pluginName, overwrite = false) {
 
 		const pluginPackageJson = path.join(tempDir, "package.json");
 		if (fs.existsSync(pluginPackageJson)) {
-			console.log(`[INFO] Checking additional dependencies...`.cyan);
+			console.log(`\n[INFO] Checking additional dependencies...`.cyan);
 			const pkgData = JSON.parse(fs.readFileSync(pluginPackageJson, "utf8"));
 
 			if (pkgData.dependencies) {
@@ -170,6 +170,7 @@ async function installPlugin(pluginName, overwrite = false) {
 
 				if (deps) {
 					execSync(`npm install ${deps}`, { cwd: __dirname, stdio: "inherit" });
+					console.log(`\n[INFO] Installed packages: ${deps}`.cyan);
 				}
 			}
 		}
