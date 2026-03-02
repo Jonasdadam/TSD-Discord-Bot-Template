@@ -3,12 +3,20 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exceptions = []) => {
 	let localContextMenus = [];
-	const menuFiles = getAllFiles(path.join(__dirname, "..", "..", "contextmenus"));
+	const basePath = path.join(__dirname, "..", "..", "contextmenus");
 
-	for (const menuFile of menuFiles) {
-		const menuObject = require(menuFile);
+	const allFiles = getAllFiles(basePath);
 
-		if (exceptions.includes(menuObject.name)) continue;
+	const categories = getAllFiles(basePath, true);
+	for (const category of categories) {
+		const categoryFiles = getAllFiles(category);
+		allFiles.push(...categoryFiles);
+	}
+
+	for (const file of allFiles) {
+		const menuObject = require(file);
+
+		if (exceptions.includes(menuObject.data?.name || menuObject.name)) continue;
 		localContextMenus.push(menuObject);
 	}
 

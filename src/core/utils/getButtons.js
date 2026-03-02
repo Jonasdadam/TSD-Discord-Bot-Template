@@ -3,12 +3,20 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exceptions = []) => {
 	let buttons = [];
-	const buttonFiles = getAllFiles(path.join(__dirname, "..", "..", "buttons"));
+	const basePath = path.join(__dirname, "..", "..", "buttons");
 
-	for (const buttonFile of buttonFiles) {
-		const buttonObject = require(buttonFile);
+	const allFiles = getAllFiles(basePath);
 
-		if (exceptions.includes(buttonObject.name)) continue;
+	const categories = getAllFiles(basePath, true);
+	for (const category of categories) {
+		const categoryFiles = getAllFiles(category);
+		allFiles.push(...categoryFiles);
+	}
+
+	for (const file of allFiles) {
+		const buttonObject = require(file);
+
+		if (exceptions.includes(buttonObject.name || buttonObject.customId)) continue;
 		buttons.push(buttonObject);
 	}
 

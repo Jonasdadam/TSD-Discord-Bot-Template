@@ -3,12 +3,20 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exceptions = []) => {
 	let selects = [];
-	const selectFiles = getAllFiles(path.join(__dirname, "..", "..", "selects"));
+	const basePath = path.join(__dirname, "..", "..", "selects");
 
-	for (const selectFile of selectFiles) {
-		const selectObject = require(selectFile);
+	const allFiles = getAllFiles(basePath);
 
-		if (exceptions.includes(selectObject.name)) continue;
+	const categories = getAllFiles(basePath, true);
+	for (const category of categories) {
+		const categoryFiles = getAllFiles(category);
+		allFiles.push(...categoryFiles);
+	}
+
+	for (const file of allFiles) {
+		const selectObject = require(file);
+
+		if (exceptions.includes(selectObject.name || selectObject.customId)) continue;
 		selects.push(selectObject);
 	}
 

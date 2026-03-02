@@ -3,12 +3,20 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exceptions = []) => {
 	let modals = [];
-	const modalFiles = getAllFiles(path.join(__dirname, "..", "..", "modals"));
+	const basePath = path.join(__dirname, "..", "..", "modals");
 
-	for (const modalFile of modalFiles) {
-		const modalObject = require(modalFile);
+	const allFiles = getAllFiles(basePath);
 
-		if (exceptions.includes(modalObject.name)) continue;
+	const categories = getAllFiles(basePath, true);
+	for (const category of categories) {
+		const categoryFiles = getAllFiles(category);
+		allFiles.push(...categoryFiles);
+	}
+
+	for (const file of allFiles) {
+		const modalObject = require(file);
+
+		if (exceptions.includes(modalObject.name || modalObject.customId)) continue;
 		modals.push(modalObject);
 	}
 
