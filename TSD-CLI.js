@@ -1,12 +1,11 @@
-#!/usr/bin/env node
 require("colors");
 const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
 
-// Configure the GitHub details
-const REPO_OWNER = "Jonasdadam"; // Of TheSynxDev
+// GitHub details
+const REPO_OWNER = "Jonasdadam";
 const REPO_NAME = "TSD-Plugins";
 const REPO_BRANCH = "main";
 const PLUGINS_DIR_IN_REPO = "plugins";
@@ -14,7 +13,6 @@ const PLUGINS_DIR_IN_REPO = "plugins";
 const args = process.argv.slice(2);
 const command = args[0];
 
-// --- Helper Functions for Native GitHub Downloads ---
 function fetchJson(url) {
 	return new Promise((resolve, reject) => {
 		https.get(url, { headers: { "User-Agent": "TSD-CLI" } }, (res) => {
@@ -50,7 +48,6 @@ function downloadFile(url, dest) {
 		});
 	});
 }
-// ----------------------------------------------------
 
 async function main() {
 	switch (command) {
@@ -118,7 +115,6 @@ async function installPlugin(pluginName, overwrite = false) {
 
 		console.log(`[INFO] Fetching plugin data...`.cyan);
 		
-		// 1. Fetch the entire file tree of the repository
 		const treeUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${REPO_BRANCH}?recursive=1`;
 		let treeData;
 		
@@ -128,7 +124,6 @@ async function installPlugin(pluginName, overwrite = false) {
 			throw new Error("Could not fetch repository structure. Ensure the repository is public and not empty.");
 		}
 
-		// 2. Filter out only the files that belong to our specific plugin
 		const pluginPrefix = `${PLUGINS_DIR_IN_REPO}/${pluginName}/`;
 		const pluginFiles = treeData.tree.filter((item) => item.type === "blob" && item.path.startsWith(pluginPrefix));
 
@@ -138,7 +133,6 @@ async function installPlugin(pluginName, overwrite = false) {
 
 		console.log(`[INFO] Downloading ${pluginFiles.length} files...`.cyan);
 
-		// 3. Download each file directly
 		for (const file of pluginFiles) {
 			const relativePath = file.path.substring(pluginPrefix.length);
 			const destPath = path.join(tempDir, relativePath);
