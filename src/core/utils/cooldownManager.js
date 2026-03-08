@@ -17,6 +17,12 @@ function checkCooldown(userId, commandName, cooldown) {
 	}
 
 	cooldowns.set(key, now + cooldown);
+
+	// Prevent Memory Leak: Remove the cooldown entry once it expires
+	setTimeout(() => {
+		cooldowns.delete(key);
+	}, cooldown);
+
 	return 0;
 }
 
