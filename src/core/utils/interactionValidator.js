@@ -25,7 +25,7 @@ module.exports = async (interaction, commandObject) => {
 		return false;
 	}
 
-	// Permissions Check (Only in guilds)
+	// Permissions Check (Enkel in guilds)
 	if (guild) {
 		// User Permissions
 		if (commandObject.userPermissions?.length && !member.permissions.has(commandObject.userPermissions)) {
@@ -33,8 +33,8 @@ module.exports = async (interaction, commandObject) => {
 			return false;
 		}
 
-		// Bot Permissions (Use appPermissions to respect channel overrides!)
-		if (commandObject.botPermissions?.length && !interaction.appPermissions.has(commandObject.botPermissions)) {
+		// Bot Permissions
+		if (commandObject.botPermissions?.length && !guild.members.me.permissions.has(commandObject.botPermissions)) {
 			await sendError(interaction, botConfig.messages.botNoPermissions);
 			return false;
 		}
