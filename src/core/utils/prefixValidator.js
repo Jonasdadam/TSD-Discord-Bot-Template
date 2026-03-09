@@ -4,13 +4,13 @@ const botConfig = require("../../configs/botConfig.json");
 const { checkCooldown } = require("./cooldownManager");
 
 module.exports = async (message, command) => {
-	const { author, guild, member } = message;
+	const { author, guild, member, channel } = message;
 	const { ownerID, devIDs, devServerID } = botConfig.development;
 
 	const isDevServer = guild?.id === devServerID;
 
 	// Guild Only Check
-	if (command.guildOnly && !message.guild) return false;
+	if (command.guildOnly && !guild) return false;
 
 	// Test Mode Check
 	if (command.testMode && !isDevServer) return false;
@@ -35,8 +35,8 @@ module.exports = async (message, command) => {
 			return false;
 		}
 
-		// Bot Permissions Check
-		if (command.botPermissions?.length && !guild.members.me.permissions.has(command.botPermissions)) {
+		// Bot Permissions Check (using permissionsIn to account for channel overrides)
+		if (command.botPermissions?.length && !guild.members.me.permissionsIn(channel).has(command.botPermissions)) {
 			await sendError(message, botConfig.messages.botNoPermissions);
 			return false;
 		}
